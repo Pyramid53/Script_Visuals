@@ -13,6 +13,7 @@ function App() {
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   // States for image generation
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('GEMINI_API_KEY') || '');
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
   const [isGeneratingImage, setIsGeneratingImage] = useState<Record<string, boolean>>({});
   const [isAutoGenerating, setIsAutoGenerating] = useState(false);
@@ -27,7 +28,7 @@ function App() {
     setIsLoading(true);
     setError(null);
     try {
-      const generatedData = await generatePrompts(lines);
+      const generatedData = await generatePrompts(lines, apiKey);
       setScenes(generatedData);
       setGeneratedImages({}); // clear previously generated images
       setIsAutoGenerating(false);
@@ -98,7 +99,7 @@ function App() {
   const generateAndLoadImage = async (id: string, prompt: string) => {
     setIsGeneratingImage(prev => ({ ...prev, [id]: true }));
     try {
-      const dataUrl = await generateGeminiImage(prompt);
+      const dataUrl = await generateGeminiImage(prompt, apiKey);
       setGeneratedImages(prev => ({ ...prev, [id]: dataUrl }));
     } catch (error) {
       console.error("Failed to generate image:", error);
@@ -224,6 +225,26 @@ function App() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        <section className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-6 space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="apiKey" className="block text-sm font-medium text-neutral-700">
+              Gemini API Key (Required for GitHub Pages deployment)
+            </label>
+            <input
+              id="apiKey"
+              type="password"
+              className="w-full rounded-xl border-neutral-300 shadow-sm focus:border-primary focus:ring-primary p-3 text-neutral-800 bg-neutral-50 border"
+              placeholder="AIzaSy..."
+              value={apiKey}
+              onChange={(e) => {
+                setApiKey(e.target.value);
+                localStorage.setItem('GEMINI_API_KEY', e.target.value);
+              }}
+            />
+            <p className="text-xs text-neutral-500">Your key is stored securely in your browser's local storage.</p>
+          </div>
+        </section>
+
         <section className="bg-white rounded-2xl shadow-sm border border-neutral-200 p-6 space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between items-center">

@@ -1,6 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI(apiKey?: string) {
+  if (apiKey) {
+    return new GoogleGenAI({ apiKey });
+  }
+  if (!aiInstance) {
+    const envKey = process.env.GEMINI_API_KEY;
+    if (!envKey) {
+      throw new Error("Gemini API key is missing. Please provide it in the settings.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey: envKey });
+  }
+  return aiInstance;
+}
 
 export interface Scene {
   sceneNumber: number;
@@ -8,7 +22,8 @@ export interface Scene {
   englishPrompt: string;
 }
 
-export async function generateGeminiImage(prompt: string): Promise<string> {
+export async function generateGeminiImage(prompt: string, apiKey?: string): Promise<string> {
+  const ai = getAI(apiKey);
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash-image',
     contents: {
@@ -37,7 +52,8 @@ export async function generateGeminiImage(prompt: string): Promise<string> {
   throw new Error("No image was successfully generated. Please try again.");
 }
 
-export async function generatePrompts(lines: string[]): Promise<Scene[]> {
+export async function generatePrompts(lines: string[], apiKey?: string): Promise<Scene[]> {
+  const ai = getAI(apiKey);
   const response = await ai.models.generateContent({
     model: "gemini-3.1-pro-preview",
     contents: `You are an expert AI prompt engineer and YouTube strategist.
